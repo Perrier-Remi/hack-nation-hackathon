@@ -1,79 +1,72 @@
 import cv2
 
 class VideoProcessor:
-    def __init__(self, videoPath):
+    def __init__(self, video_path):
         """
         Initialize the video processor with the path to the video.
         """
-        self.videoPath = videoPath
+        self.video_path = video_path
 
     def is_blurry(self, frame, threshold=100):
         """
-        Returns True if the frame is blurry.
-        Uses the variance of the Laplacian method.
+        Check if a frame is blurry using Laplacian variance.
+        Returns True if blurry.
         """
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         lap = cv2.Laplacian(gray, cv2.CV_64F)
-        variance = lap.var()
-        return variance < threshold
+        return lap.var() < threshold
 
-    def videoSampling(self, blur_threshold=100):
+    def sample_frames_every_half_second(self, video_name, blur_threshold=100, max_frames=60):
         """
-        Detects scene changes in the video and returns timestamps (in ms)
-        of key frames that are not blurry.
+        Sample frames every 0.5s. If the frame is blurry, take the previous frame.
+        Returns list of saved frame filenames.
         """
-        cap = cv2.VideoCapture(self.videoPath)
-        success, prev_frame = cap.read()
-        if not success:
-            print("Cannot read video")
-            return []
-
-        # Get video FPS
+        cap = cv2.VideoCapture(self.video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
-        
-        # Compute histogram of first frame
-        prev_hist = cv2.calcHist([cv2.cvtColor(prev_frame, cv2.COLOR_BGR2HSV)], 
-                                 [0], None, [256], [0,256])
-        
-        key_moments = []  # List to store timestamps of valid key frames
+        frame_interval = int(fps * 0.5)  # frame step for 0.5s
 
-        while True:
+        success, frame = cap.read()
+        frame_count = 0
+        saved_count = 0
+        prev_frame = None
+        saved_frames = []
+
+        while success and saved_count < max_frames:
+            # Check if this is a target frame
+            if frame_count % frame_interval == 0:
+                candidate_frame = frame
+
+                # If frame is blurry, use previous frame if available
+                if self.is_blurry(frame, blur_threshold):
+                    if prev_frame is not None and not self.is_blurry(prev_frame, blur_threshold):
+                        candidate_frame = prev_frame
+                        print(f"Frame at {frame_count} is blurry, using previous frame.")
+                    else:
+                        print(f"Frame at {frame_count} is blurry and previous frame too, skipping.")
+                        prev_frame = frame
+                        success, frame = cap.read()
+                        frame_count += 1
+                        continue  # skip saving
+
+                # Save the candidate frame
+                filename = f"{video_name}-key_frame_{saved_count}.jpg"
+                cv2.imwrite(filename, candidate_frame)
+                print(f"Saved {filename} at frame {frame_count}")
+                saved_frames.append(filename)
+                saved_count += 1
+
+            prev_frame = frame
             success, frame = cap.read()
-            if not success:
-                break
-
-            # Compute histogram of current frame
-            hist = cv2.calcHist([cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)], 
-                                [0], None, [256], [0,256])
-
-            # Compare with previous frame histogram
-            diff = cv2.compareHist(prev_hist, hist, cv2.HISTCMP_CORREL)
-
-            # If scene change detected
-            if diff < 0.7:
-                # Only keep frame if it is not blurry
-                if not self.is_blurry(frame, blur_threshold):
-                    key_moments.append(cap.get(cv2.CAP_PROP_POS_MSEC))
-                    prev_hist = hist  # update histogram for next comparison
-                else:
-                    print(f"Blurry frame ignored at {cap.get(cv2.CAP_PROP_POS_MSEC)} ms")
+            frame_count += 1
 
         cap.release()
-        return key_moments
+        print(f"Total frames saved: {saved_count}")
+        return saved_frames
 
-    def save_frames(self, key_moments):
-        """
-        Saves frames at the given timestamps (ms) to disk.
-        """
-        cap = cv2.VideoCapture(self.videoPath)
-        for i, t in enumerate(key_moments):
-            cap.set(cv2.CAP_PROP_POS_MSEC, t)
-            success, frame = cap.read()
-            if success:
-                filename = f"key_frame_{i}.jpg"
-                cv2.imwrite(filename, frame)
-                print(f"Saved frame: {filename} at {t} ms")
-            else:
-                print(f"Cannot read frame at {t} ms")
-        cap.release()
-
+"""
+Example:
+video_path = "./test.mp4
+vide_name = "ugc_video"
+video_processor = VideoProcessor(video_path)
+key_frames = video_processor.sample_frames_every_half_second(video_name,blur_threshold=100, max_frames=60)
+"""
