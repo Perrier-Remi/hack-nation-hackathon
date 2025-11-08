@@ -1,5 +1,5 @@
 import inspect
-from analyzers.base_analyzer import BaseAnalyzer
+import os
 import analyzers
 
 class VideoPipeline:
@@ -30,7 +30,6 @@ class VideoPipeline:
             })
         
         # Remove the uploaded video file after analysis
-        import os
         try:
             if os.path.exists(self.video_path):
                 os.remove(self.video_path)
