@@ -1,7 +1,8 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from pipeline.video_pipeline import VideoPipeline
 import os
+import hashlib
 
 app = FastAPI()
 
@@ -16,16 +17,17 @@ app.add_middleware(
 # Créer le dossier uploads s'il n'existe pas
 os.makedirs("uploads", exist_ok=True)
 
-@app.post("/upload-video")
+@app.post("/analyze-video")
 async def upload_video(video: UploadFile = File(...)):
     # Sauvegarder le fichier
-    with open(f"uploads/{video.filename}", "wb") as buffer:
-        content = await video.read()
+    content = await video.read()
+    file_hash = hashlib.md5(content).hexdigest()
+    video_path = f"uploads/{file_hash}.mp4"
+    with open(video_path, "wb") as buffer:
         buffer.write(content)
     
-    return {
-        "filename": video.filename,
-        "content_type": video.content_type,
-        "size": len(content)
-    }
+    video_pipeline = VideoPipeline(video_path)
+    result = video_pipeline.run()
+    
+    return result
 

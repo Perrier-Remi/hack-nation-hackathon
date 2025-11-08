@@ -21,7 +21,7 @@ function App() {
     formData.append('video', file)
 
     try {
-      const response = await fetch('/api/upload-video', {
+      const response = await fetch('/api/analyze-video', {
         method: 'POST',
         body: formData,
       })
