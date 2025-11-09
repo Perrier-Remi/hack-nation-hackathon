@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -22,4 +23,25 @@ wheels/
 .installed.cfg
 *.egg
 uploads/
+*.pt
 
+# Video processing artifacts
+uploads/audio/
+uploads/frames/
+uploads/transcripts/
+uploads/safety/
+audio/
+transcripts/
+*.mp3
+*.mp4
+*.webm
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

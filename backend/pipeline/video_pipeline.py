@@ -1,6 +1,7 @@
 import inspect
-from analyzers.base_analyzer import BaseAnalyzer
+import os
 import analyzers
+from pipeline.llm_summary import generate_analysis_summary
 
 class VideoPipeline:
     def __init__(self, video_path: str):
@@ -19,18 +20,41 @@ class VideoPipeline:
         return analyzer_classes
         
     def run(self):
-        results = []
+        # Step 1: Run all analyzers first
+        analysis_results = []
         
         for analyzer_class in self.analyzers:
             analyzer = analyzer_class(self.video_path)
             result = analyzer.run()
-            results.append({
+            analysis_results.append({
                 "analyzer": analyzer_class.__name__,
                 "result": result
             })
         
+        # Step 2: Generate LLM summary AFTER all analyses are complete
+        try:
+            print("Generating LLM summary from analysis results...")
+            llm_summary = generate_analysis_summary(analysis_results)
+            print("LLM summary generated successfully")
+        except Exception as e:
+            print(f"Error generating LLM summary: {e}")
+            import traceback
+            traceback.print_exc()
+            llm_summary = {
+                "summary": "LLM analysis unavailable",
+                "strengths": [],
+                "weaknesses": [],
+                "recommendations": [],
+                "follow_up_prompt": ""
+            }
+        
+        # Step 3: Combine all results (analyzers + LLM summary)
+        final_results = {
+            "analyzers": analysis_results,  # All analyzer scores
+            "llm_summary": llm_summary      # LLM analysis summary
+        }
+        
         # Remove the uploaded video file after analysis
-        import os
         try:
             if os.path.exists(self.video_path):
                 os.remove(self.video_path)
@@ -38,4 +62,4 @@ class VideoPipeline:
         except Exception as e:
             print(f"Error removing file {self.video_path}: {str(e)}")
             
-        return results
+        return final_results
