@@ -7,6 +7,7 @@
 ✅ **Video Analysis** - Intelligent ad scoring and critique  
 ✅ **Scene Detection** - Automatic scene boundaries with keyframe extraction  
 ✅ **Audio Transcription** - AI-powered transcription using Google Gemini  
+✅ **Safety & Ethics Checking** - NSFW, bias, and misleading claims detection  
 ✅ **Smart Caching** - Automatic file reuse to save time and API costs  
 ✅ **Tab Navigation** - Seamless switching between analysis and transcription
 
@@ -63,6 +64,11 @@ Scene Detection (PySceneDetect)
 AI Transcription (Google Gemini)
     ↓
 Structured Output (Transcript + Summary + Key Points)
+    ↓
+Safety & Ethics Check (Optional)
+    ├─ NSFW/Violence Detection (Keyframes)
+    ├─ Bias/Stereotype Detection (Transcript)
+    └─ Misleading Claims Verification (Transcript)
 ```
 
 ### Smart Caching System
@@ -108,6 +114,42 @@ Analyze video for ad scoring
 ```bash
 curl -X POST http://localhost:8000/analyze-video \
   -F "video=@path/to/video.mp4"
+```
+
+### POST /safety-check
+Check video content for safety and ethical concerns
+
+```bash
+curl -X POST http://localhost:8000/safety-check \
+  -H "Content-Type: application/json" \
+  -d '{"video_hash": "abc123"}'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "video_hash": "abc123",
+  "overall_score": 85.0,
+  "severity": "safe",
+  "nsfw_violence": {
+    "score": 95,
+    "flag": "safe",
+    "details": "No NSFW or violent content detected",
+    "frames_analyzed": 10
+  },
+  "bias_stereotypes": {
+    "score": 80,
+    "flag": "safe",
+    "details": "Language is inclusive and unbiased"
+  },
+  "misleading_claims": {
+    "score": 90,
+    "flag": "safe",
+    "details": "No misleading claims detected"
+  },
+  "cached": false
+}
 ```
 
 ## File Management
@@ -159,6 +201,9 @@ python3 test_transcription.py
 
 # Test transcript API endpoint
 python3 test_transcript_endpoint.py
+
+# Test safety checking
+python3 test_safety_checker.py
 ```
 
 ## Project Structure
@@ -168,6 +213,7 @@ hack-nation-hackathon/
 ├── backend/
 │   ├── analyzers/              # AI analyzers
 │   │   ├── transcription_service.py
+│   │   ├── safety_checker.py
 │   │   ├── ia_face_detector.py
 │   │   └── censor.py
 │   ├── preprocessing/          # Video/audio processing
@@ -178,7 +224,8 @@ hack-nation-hackathon/
 │   ├── docs/                   # Technical documentation
 │   │   ├── README.md           # Architecture overview
 │   │   ├── SCENE_BASED_PROCESSING.md
-│   │   └── TRANSCRIPTION.md
+│   │   ├── TRANSCRIPTION.md
+│   │   └── SAFETY_CHECKS.md
 │   ├── main.py                 # FastAPI application
 │   ├── config.py               # Configuration
 │   ├── requirements.txt        # Python dependencies
@@ -234,6 +281,14 @@ GOOGLE_AI_STUDIO_API_KEY=your_gemini_api_key_here
   - Language detection
 - Automatic retry on failures
 - Saves JSON and TXT formats
+
+### Safety & Ethics Checking
+- **NSFW/Violence Detection**: Analyzes keyframes for inappropriate content
+- **Bias/Stereotype Detection**: Checks transcript for discriminatory language
+- **Misleading Claims Verification**: Detects unverifiable or false claims
+- Comprehensive scoring system (0-100)
+- Three severity levels: safe, warning, unsafe
+- Smart caching for performance
 
 ### Frontend UI
 - Tab navigation between Analysis and Transcript

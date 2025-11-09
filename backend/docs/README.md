@@ -4,13 +4,14 @@
 
 1. **[SCENE_BASED_PROCESSING.md](SCENE_BASED_PROCESSING.md)** - Scene detection and keyframe extraction
 2. **[TRANSCRIPTION.md](TRANSCRIPTION.md)** - Audio transcription setup
+3. **[SAFETY_CHECKS.md](SAFETY_CHECKS.md)** - Safety and ethics checking
 
 ## Architecture Overview
 
 ### Video Processing Pipeline
 
 ```
-Video Input → Scene Detection → Keyframe Extraction → Audio Extraction → Transcription
+Video Input → Scene Detection → Keyframe Extraction → Audio Extraction → Transcription → Safety Check
 ```
 
 ### Core Components
@@ -25,7 +26,13 @@ Video Input → Scene Detection → Keyframe Extraction → Audio Extraction →
    - Generates structured transcripts with summaries
    - Automatic retry on failures
 
-3. **VideoProcessor** (`preprocessing/video_processor.py`)
+3. **SafetyChecker** (`analyzers/safety_checker.py`)
+   - NSFW/violence detection on keyframes
+   - Bias/stereotype detection in transcripts
+   - Misleading claims verification
+   - Comprehensive safety scoring
+
+4. **VideoProcessor** (`preprocessing/video_processor.py`)
    - Frame sampling with blur detection
    - Extracts frames every 0.5 seconds
    - Skips blurry frames
@@ -36,8 +43,13 @@ Video Input → Scene Detection → Keyframe Extraction → Audio Extraction →
 - ✅ Multiple keyframes per scene (5 frames)
 - ✅ Audio extraction from video
 - ✅ AI-powered transcription
+- ✅ Safety and ethics checking
+- ✅ NSFW/violence detection
+- ✅ Bias and stereotype detection
+- ✅ Misleading claims verification
 - ✅ Structured data models
 - ✅ Artifact management
+- ✅ Smart caching for performance
 
 ## Testing
 
@@ -47,6 +59,9 @@ python3 test_processor.py
 
 # Transcription
 python3 test_transcription.py
+
+# Safety checking
+python3 test_safety_checker.py
 ```
 
 ## Cleanup
@@ -63,6 +78,7 @@ make clean-all
 
 - **SCENE_BASED_PROCESSING.md** - Detailed scene detection documentation
 - **TRANSCRIPTION.md** - Audio transcription setup guide
+- **SAFETY_CHECKS.md** - Safety and ethics checking guide
 - **README.md** - This file
 
 ## Environment Setup
@@ -80,9 +96,10 @@ See [TRANSCRIPTION.md](TRANSCRIPTION.md) for detailed setup instructions.
 See `requirements.txt` for full list. Key dependencies:
 
 - `scenedetect[opencv]` - Scene detection
-- `google-generativeai` - Gemini API for transcription
+- `google-generativeai` - Gemini API for transcription and safety checks
 - `moviepy` - Video processing
 - `pydub` - Audio manipulation
+- `Pillow` - Image processing
 
 ---
 

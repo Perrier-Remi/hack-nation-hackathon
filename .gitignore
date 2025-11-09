@@ -32,6 +32,7 @@ Thumbs.db
 backend/uploads/
 backend/audio/
 backend/transcripts/
+backend/safety/
 *.mp4
 *.webm
 *.mp3

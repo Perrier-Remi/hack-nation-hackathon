@@ -10,6 +10,8 @@ from moviepy.editor import VideoFileClip
 from PIL import Image
 from typing import List
 import os
+import subprocess
+import time
 from scenedetect import open_video, SceneManager, ContentDetector
 from preprocessing.models import SceneSegment, VideoAnalysisData
 
@@ -20,7 +22,16 @@ class AudioProcessor:
     """
 
     def __init__(self, video_path: str):
-        self.video_path = video_path
+        self._original_path = video_path  # Store original path for reference
+        
+        # Pre-convert WebM to MP4 for better compatibility
+        if video_path.endswith('.webm'):
+            print(f"🔄 WebM detected, pre-converting to MP4 for compatibility...")
+            self.video_path = self._convert_webm_to_mp4_static(video_path)
+            print(f"✓ Using MP4: {self.video_path}")
+        else:
+            self.video_path = video_path
+            
         self.video = None
 
     def process(self, save_segments: bool = True, threshold: float = 27.0) -> VideoAnalysisData:
@@ -36,25 +47,27 @@ class AudioProcessor:
         """
         print(f"🎬 Starting scene-based video processing...")
         
-        # Step 1: Detect scenes using PySceneDetect
+        # Step 1: Detect scenes FIRST (before opening with MoviePy)
         print(f"🔍 Detecting scenes (threshold={threshold})...")
-        scene_list = self._detect_scenes(threshold)
+        scene_list, fps, duration = self._detect_scenes(threshold)
         
         if not scene_list:
-            raise ValueError("No scenes detected in video. Try adjusting the threshold.")
+            print(f"⚠️  No scenes detected - treating entire video as single scene")
+            # Create a single scene spanning the entire video
+            from scenedetect.frame_timecode import FrameTimecode
+            scene_list = [
+                (FrameTimecode(0, fps=fps), FrameTimecode(timecode=duration, fps=fps))
+            ]
         
         print(f"✓ Detected {len(scene_list)} scenes")
         
-        # Step 2: Load video with MoviePy for frame extraction
+        # Step 2: Open video with MoviePy (after scene detection is complete)
         self.video = VideoFileClip(self.video_path)
         
+        # Check for audio track
         if self.video.audio is None:
             self.video.close()
             raise ValueError(f"No audio track found in video: {self.video_path}")
-        
-        # Get video properties
-        fps = self.video.fps
-        duration = self.video.duration
         
         # Get video UUID for directory structure
         video_uuid = self.video_path.split("/")[-1].split(".")[0]
@@ -121,7 +134,7 @@ class AudioProcessor:
 
     
 
-    def _detect_scenes(self, threshold: float) -> List:
+    def _detect_scenes(self, threshold: float) -> tuple:
         """
         Detect scenes in the video using PySceneDetect.
         
@@ -129,17 +142,28 @@ class AudioProcessor:
             threshold: Content detection threshold
             
         Returns:
-            List of (start_time, end_time) tuples
+            Tuple of (scene_list, fps, duration) where:
+                - scene_list: List of (start_time, end_time) tuples
+                - fps: Frames per second
+                - duration: Video duration in seconds
         """
         video = open_video(self.video_path)
         scene_manager = SceneManager()
         scene_manager.add_detector(ContentDetector(threshold=threshold))
         
+        # Get video metadata
+        fps = video.frame_rate
+        duration = video.duration.get_seconds()
+        
         # Detect scenes
         scene_manager.detect_scenes(video)
         scene_list = scene_manager.get_scene_list()
         
-        return scene_list
+        # Close the video to release file handle (PySceneDetect wraps cv2.VideoCapture)
+        if hasattr(video, 'capture') and hasattr(video.capture, 'release'):
+            video.capture.release()
+        
+        return scene_list, fps, duration
     
     def _extract_keyframes(self, start_time: float, end_time: float, num_frames: int = 5) -> List[Image.Image]:
         """
@@ -225,3 +249,62 @@ class AudioProcessor:
         self.video.audio.write_audiofile(audio_path, logger=None)
         
         return audio_path
+    
+    @staticmethod
+    def _convert_webm_to_mp4_static(webm_path: str) -> str:
+        """
+        Convert WebM video to MP4 using ffmpeg for better compatibility.
+        Static method that can be called from __init__.
+        
+        Args:
+            webm_path: Path to the WebM file
+            
+        Returns:
+            Path to the converted MP4 file
+        """
+        mp4_path = webm_path.rsplit('.', 1)[0] + '.mp4'
+        
+        if os.path.exists(mp4_path):
+            return mp4_path
+        
+        try:
+            # Use ffmpeg to convert with maximum compatibility settings
+            cmd = [
+                'ffmpeg', '-i', webm_path,
+                '-c:v', 'libx264',      # H.264 video codec
+                '-preset', 'fast',       # Faster encoding
+                '-crf', '23',            # Constant quality
+                '-pix_fmt', 'yuv420p',   # Pixel format for compatibility
+                '-c:a', 'aac',           # AAC audio codec
+                '-b:a', '192k',
+                '-movflags', '+faststart',  # Enable fast start for web
+                '-y',  # Overwrite output file
+                '-loglevel', 'error',    # Only show errors
+                mp4_path
+            ]
+            
+            result = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=120  # 2 minute timeout
+            )
+            
+            if result.returncode == 0 and os.path.exists(mp4_path):
+                # Wait for file to be fully written and file handles to close
+                time.sleep(1.0)
+                
+                # Verify file size is reasonable
+                file_size = os.path.getsize(mp4_path)
+                if file_size < 1000:  # Less than 1KB is probably corrupt
+                    raise Exception(f"Converted MP4 is too small ({file_size} bytes)")
+                
+                return mp4_path
+            else:
+                error_msg = result.stderr.decode()
+                raise Exception(f"FFmpeg conversion failed: {error_msg}")
+                
+        except subprocess.TimeoutExpired:
+            raise Exception("Video conversion timed out (>2 minutes)")
+        except FileNotFoundError:
+            raise Exception("FFmpeg not found. Please install ffmpeg.")

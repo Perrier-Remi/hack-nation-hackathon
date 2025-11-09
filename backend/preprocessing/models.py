@@ -1,11 +1,11 @@
 """
-Data models for video preprocessing
+Data models for video preprocessing and safety checking
 """
 
 from dataclasses import dataclass
 from pydub import AudioSegment
 from PIL import Image
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 
 @dataclass
@@ -56,5 +56,29 @@ class VideoAnalysisData:
                 }
                 for scene in self.scenes
             ]
+        }
+
+
+@dataclass
+class SafetyReport:
+    """Container for safety and ethics check results"""
+    overall_score: float  # 0-100, where 100 is completely safe
+    severity: str  # "safe", "warning", or "unsafe"
+    nsfw_violence: Dict  # {score, flag, details, frames_analyzed, issues_found}
+    bias_stereotypes: Dict  # {score, flag, details, issues_found}
+    misleading_claims: Dict  # {score, flag, details, keywords_found, misleading_claims}
+    checked_at: str  # ISO format timestamp
+    cached: bool  # Whether result was from cache
+    
+    def to_dict(self) -> dict:
+        """Convert to dictionary for JSON serialization"""
+        return {
+            'overall_score': self.overall_score,
+            'severity': self.severity,
+            'nsfw_violence': self.nsfw_violence,
+            'bias_stereotypes': self.bias_stereotypes,
+            'misleading_claims': self.misleading_claims,
+            'checked_at': self.checked_at,
+            'cached': self.cached
         }
 
