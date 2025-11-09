@@ -16,7 +16,7 @@ class VideoProcessor:
         lap = cv2.Laplacian(gray, cv2.CV_64F)
         return lap.var() < threshold
 
-    def sample_frames_every_half_second(self, video_name, blur_threshold=100, max_frames=60):
+    def extract_frames(self, video_name, blur_threshold=100, max_frames=60):
         """
         Sample frames every 0.5s. If the frame is blurry, take the previous frame.
         Returns list of saved frame filenames.
