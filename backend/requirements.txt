@@ -1,10 +1,17 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
+pydub==0.25.1
+moviepy==1.0.3
+Pillow==10.1.0
+scenedetect[opencv]==0.6.2
 ultralytics==8.1.0
 opencv-python>=4.8.0
-numpy>=1.26.0
+numpy>=1.26.0,<2
 torch<2.6.0
 scikit-image>=0.21.0
+<<<<<<< HEAD
 transformers>=4.30.0
 Pillow>=9.0.0
+=======
+>>>>>>> a9afaf484ad4b13f20e4baa969f017eea0b3215f

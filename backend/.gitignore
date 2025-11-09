@@ -22,3 +22,11 @@ wheels/
 .installed.cfg
 *.egg
 uploads/
+
+# Video processing artifacts
+uploads/audio/
+uploads/frames/
+audio/
+*.mp3
+*.mp4
+*.webm
