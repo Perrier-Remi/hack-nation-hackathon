@@ -86,7 +86,7 @@ function App() {
           <div className="upload-section">
             <input
               type="file"
-              accept="video/*"
+              accept="video/mp4,video/webm,video/*"
               onChange={handleFileChange}
               disabled={uploading}
             />
