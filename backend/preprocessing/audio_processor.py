@@ -215,14 +215,13 @@ class AudioProcessor:
         """
         video_uuid = self.video_path.split("/")[-1].split(".")[0]
         
-        # Ensure audio directory exists
-        audio_dir = os.path.dirname(self.video_path).replace("uploads", "audio")
-        if not audio_dir or audio_dir == self.video_path:
-            audio_dir = "audio"
+        # Ensure audio directory exists - keep it in same parent directory
+        base_dir = os.path.dirname(self.video_path) or "."
+        audio_dir = os.path.join(base_dir, "audio")
         
         os.makedirs(audio_dir, exist_ok=True)
         
-        audio_path = f"{audio_dir}/{video_uuid}_audio.mp3"
+        audio_path = os.path.join(audio_dir, f"{video_uuid}_audio.mp3")
         self.video.audio.write_audiofile(audio_path, logger=None)
         
         return audio_path
