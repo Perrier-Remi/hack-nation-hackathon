@@ -22,6 +22,11 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+<<<<<<< HEAD
+=======
+uploads/
+*.pt
+>>>>>>> main
 
 # Video processing artifacts
 uploads/audio/
