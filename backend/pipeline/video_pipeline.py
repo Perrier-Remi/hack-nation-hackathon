@@ -32,28 +32,21 @@ class VideoPipeline:
             })
         
         # Step 2: Generate LLM summary AFTER all analyses are complete
-        # LLM summary is currently disabled
-        llm_summary = {
-            "summary": "LLM analysis is currently disabled",
-            "strengths": [],
-            "weaknesses": [],
-            "recommendations": [],
-            "follow_up_prompt": ""
-        }
-        # try:
-        #     print("Generating LLM summary from analysis results...")
-        #     llm_summary = generate_analysis_summary(analysis_results)
-        #     print("LLM summary generated successfully")
-        # except Exception as e:
-        #     print(f"Error generating LLM summary: {e}")
-        #     import traceback
-        #     traceback.print_exc()
-        #     llm_summary = {
-        #         "summary": "LLM analysis unavailable",
-        #         "strengths": [],
-        #         "weaknesses": [],
-        #         "recommendations": []
-        #     }
+        try:
+            print("Generating LLM summary from analysis results...")
+            llm_summary = generate_analysis_summary(analysis_results)
+            print("LLM summary generated successfully")
+        except Exception as e:
+            print(f"Error generating LLM summary: {e}")
+            import traceback
+            traceback.print_exc()
+            llm_summary = {
+                "summary": "LLM analysis unavailable",
+                "strengths": [],
+                "weaknesses": [],
+                "recommendations": [],
+                "follow_up_prompt": ""
+            }
         
         # Step 3: Combine all results (analyzers + LLM summary)
         final_results = {

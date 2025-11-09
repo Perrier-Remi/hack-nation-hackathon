@@ -5,7 +5,7 @@ from PIL import Image
 
 class VideoQualityAnalyzer():
     def __init__(self, video_path: str):
-        super().__init__(video_path)
+        self.video_path = video_path
     
     def _extract_frames(self, max_frames: int = 15, sample_interval: int = 2) -> List[np.ndarray]:
         """Extract frames from video"""
