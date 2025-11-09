@@ -1,3 +1,16 @@
+<<<<<<< HEAD
+fastapi
+uvicorn[standard]
+python-multipart
+pydub
+moviepy
+Pillow
+scenedetect[opencv]
+opencv-python
+google-generativeai
+python-dotenv
+ultralytics
+=======
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
@@ -12,3 +25,4 @@ torch<2.6.0
 scikit-image>=0.21.0
 transformers>=4.30.0
 Pillow>=9.0.0
+>>>>>>> main

@@ -32,6 +32,8 @@ class VideoAnalysisData:
     duration: float
     fps: float
     scenes: List[SceneSegment]
+    transcript: Optional[str] = None  # Full video transcript
+    transcript_path: Optional[str] = None  # Path to saved transcript
     
     def to_dict(self) -> dict:
         """Convert to dictionary (without heavy objects like images/audio)"""
@@ -40,6 +42,8 @@ class VideoAnalysisData:
             'duration': self.duration,
             'fps': self.fps,
             'total_scenes': len(self.scenes),
+            'transcript': self.transcript,
+            'transcript_path': self.transcript_path,
             'scenes_info': [
                 {
                     'scene_index': scene.scene_index,
