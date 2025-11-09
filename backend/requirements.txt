@@ -10,8 +10,5 @@ opencv-python>=4.8.0
 numpy>=1.26.0,<2
 torch<2.6.0
 scikit-image>=0.21.0
-<<<<<<< HEAD
 transformers>=4.30.0
 Pillow>=9.0.0
-=======
->>>>>>> a9afaf484ad4b13f20e4baa969f017eea0b3215f
