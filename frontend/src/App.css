@@ -346,6 +346,52 @@
   word-wrap: break-word;
 }
 
+/* Graph helpers */
+.graph-card {
+  flex: 1 1 280px;
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(15, 118, 110, 0.25));
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: var(--text-secondary);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(20px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.graph-card h4 {
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.graph-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.45);
+}
+
+.graph-link-button {
+  margin-top: 1rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(255, 0, 255, 0.15));
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.graph-link-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 240, 255, 0.25);
+}
+
+.graph-link-button:active {
+  transform: translateY(0);
+}
+
 /* Status Messages */
 .status-message {
   padding: 1rem;

@@ -30,6 +30,8 @@ uploads/audio/
 uploads/frames/
 uploads/transcripts/
 uploads/safety/
+uploads/enhanced/
+uploads/analysis_*.json
 audio/
 transcripts/
 *.mp3

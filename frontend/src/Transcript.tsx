@@ -142,24 +142,27 @@ function Transcript() {
 
   return (
     <div className="app">
-      <div className="app-header">
-        <h1>Video Transcription</h1>
-        <p>AI-Powered Audio Transcription & Analysis</p>
-      </div>
+      <h1>Video Transcription</h1>
+      <p style={{ color: '#666', marginBottom: '2rem' }}>
+        Upload a video to get an AI-powered transcript
+      </p>
       
       <div className="upload-section">
         <div className="file-input-wrapper">
           <label
             className={`file-input-label ${dragOver ? 'dragover' : ''}`}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setDragOver(true)
+            }}
             onDragLeave={() => setDragOver(false)}
             onDrop={(e) => {
-              e.preventDefault();
-              setDragOver(false);
+              e.preventDefault()
+              setDragOver(false)
               if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                setFile(e.dataTransfer.files[0]);
-                setResult(null);
-                setSafetyResult(null);
+                setFile(e.dataTransfer.files[0])
+                setResult(null)
+                setSafetyResult(null)
               }
             }}
           >
@@ -177,7 +180,7 @@ function Transcript() {
           </label>
         </div>
 
-        {file && !result && (
+        {file && (
           <div className="file-info">
             Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
           </div>
@@ -187,18 +190,26 @@ function Transcript() {
           className={`upload-button ${uploading ? 'loading' : ''}`}
           onClick={handleTranscribe}
           disabled={!file || uploading}
+          style={{ width: 'auto', padding: '0.85rem 2.5rem' }}
         >
-          {uploading ? 'Processing...' : '🎙️ Transcribe Video'}
+          {uploading ? 'Processing...' : '✨ Transcribe Video'}
         </button>
-
-        {uploading && (
-          <div className="status-message info">
-            <div className="loading-spinner"></div>
-            <span>Processing your video... Extracting audio and transcribing...</span>
-          </div>
-        )}
       </div>
 
+      {file && !result && (
+        <div style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>
+          Ready to transcribe: <strong>{file.name}</strong>
+        </div>
+      )}
+
+      {uploading && (
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <p>⏳ Processing your video...</p>
+          <p style={{ fontSize: '0.9rem', color: '#666' }}>
+            This may take a minute. Extracting audio and transcribing...
+          </p>
+        </div>
+      )}
 
       {result && (
         <div className="result" style={{ marginTop: '2rem' }}>
@@ -207,40 +218,39 @@ function Transcript() {
               <h2>✅ Transcription Complete</h2>
               
               {result.cached && (
-                <div className="status-message success">
-                  <span>⚡</span>
-                  <span>Using cached transcript (file already processed)</span>
+                <div style={{ 
+                  marginBottom: '1rem', 
+                  padding: '0.75rem', 
+                  background: '#e3f2fd', 
+                  border: '1px solid #2196f3',
+                  borderRadius: '8px',
+                  color: '#1976d2',
+                  fontSize: '0.9rem'
+                }}>
+                  ⚡ Using cached transcript (file already processed)
                 </div>
               )}
               
-              <div className="analysis-card" style={{ marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                  <span>🌐 Language: <strong style={{ color: 'var(--primary)' }}>{result.language}</strong></span>
-                  <span>📊 Words: <strong style={{ color: 'var(--primary)' }}>{result.word_count}</strong></span>
+              <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f5f5f5', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#666' }}>
+                  <span>Language: {result.language}</span>
+                  <span>Words: {result.word_count}</span>
                 </div>
               </div>
 
               {result.summary && (
-                <div className="summary-section">
+                <div style={{ marginBottom: '1.5rem' }}>
                   <h3>📋 Summary</h3>
-                  <p style={{ 
-                    background: 'rgba(255, 255, 255, 0.6)', 
-                    padding: '1rem', 
-                    borderRadius: '12px', 
-                    border: '1px solid var(--border-glow)',
-                    lineHeight: '1.6',
-                    color: 'var(--text-secondary)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
-                  }}>
+                  <p style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '8px', lineHeight: '1.6' }}>
                     {result.summary}
                   </p>
                 </div>
               )}
 
               {result.key_points && result.key_points.length > 0 && (
-                <div className="summary-section">
+                <div style={{ marginBottom: '1.5rem' }}>
                   <h3>🔑 Key Points</h3>
-                  <ul className="summary-list">
+                  <ul style={{ textAlign: 'left', lineHeight: '1.8' }}>
                     {result.key_points.map((point, index) => (
                       <li key={index}>{point}</li>
                     ))}
@@ -248,73 +258,70 @@ function Transcript() {
                 </div>
               )}
 
-              <div className="summary-section">
+              <div style={{ marginBottom: '1.5rem' }}>
                 <h3>📝 Full Transcript</h3>
-                <div className="json-display" style={{ 
+                <div style={{ 
+                  background: '#fff', 
+                  padding: '1.5rem', 
+                  borderRadius: '8px', 
+                  border: '1px solid #e0e0e0',
                   maxHeight: '400px',
                   overflow: 'auto',
                   textAlign: 'left',
                   lineHeight: '1.8',
-                  whiteSpace: 'pre-wrap',
-                  color: 'var(--text-secondary)'
+                  whiteSpace: 'pre-wrap'
                 }}>
                   {result.transcript}
                 </div>
               </div>
 
               {result.transcript_path && (
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  💾 Saved to: <code style={{ color: 'var(--primary)' }}>{result.transcript_path}</code>
+                <p style={{ fontSize: '0.85rem', color: '#999' }}>
+                  Saved to: {result.transcript_path}
                 </p>
               )}
 
               {/* Safety Check Section */}
-              <div className="llm-summary" style={{ marginTop: '2rem' }}>
+              <div style={{ 
+                marginTop: '2rem', 
+                padding: '1.5rem', 
+                background: '#f5f5f5', 
+                borderRadius: '8px',
+                border: '2px dashed #bdbdbd'
+              }}>
                 <h3 style={{ marginTop: 0 }}>🛡️ Safety & Ethics Check</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1rem' }}>
+                <p style={{ color: '#666', fontSize: '0.95rem', marginBottom: '1rem' }}>
                   Analyze this video for content safety, bias, and misleading claims
                 </p>
                 {result.video_hash ? (
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                    Video Hash: <code style={{ color: 'var(--primary)' }}>{result.video_hash}</code>
+                  <p style={{ fontSize: '0.85rem', color: '#999', marginBottom: '1rem' }}>
+                    Video Hash: {result.video_hash}
                   </p>
                 ) : (
-                  <div className="status-message error" style={{ marginBottom: '1rem' }}>
-                    <span>⚠️</span>
-                    <span>No video hash available - safety check disabled</span>
-                  </div>
+                  <p style={{ fontSize: '0.85rem', color: '#f44336', marginBottom: '1rem' }}>
+                    ⚠️ No video hash available - safety check disabled
+                  </p>
                 )}
-                <button 
+                <button
                   className={`upload-button ${safetyChecking ? 'loading' : ''}`}
                   onClick={() => {
                     console.log('Safety check button clicked!', { video_hash: result.video_hash })
                     handleSafetyCheck()
                   }}
                   disabled={safetyChecking || !result.video_hash}
-                  style={{
-                    background: (safetyChecking || !result.video_hash) 
-                      ? 'rgba(255, 255, 255, 0.1)' 
-                      : 'linear-gradient(135deg, var(--accent) 0%, #00cc6a 100%)',
-                    cursor: (safetyChecking || !result.video_hash) ? 'not-allowed' : 'pointer',
-                    opacity: (safetyChecking || !result.video_hash) ? 0.5 : 1
-                  }}
+                  style={{ width: 'auto', padding: '0.85rem 2.5rem' }}
                 >
-                  {safetyChecking ? 'Checking...' : '🔍 Run Safety Check'}
+                  {safetyChecking ? '⏳ Checking...' : '🔍 Run Safety Check'}
                 </button>
               </div>
             </>
           ) : (
             <>
-              <h2 style={{ color: '#ff4444' }}>❌ Transcription Failed</h2>
-              <div className="status-message error">
-                <span>Error:</span>
-                <span>{result.error}</span>
+              <h2 style={{ color: '#d32f2f' }}>❌ Transcription Failed</h2>
+              <div style={{ background: '#ffebee', padding: '1rem', borderRadius: '8px', marginTop: '1rem' }}>
+                <p><strong>Error:</strong> {result.error}</p>
+                <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>{result.message}</p>
               </div>
-              {result.message && (
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                  {result.message}
-                </p>
-              )}
             </>
           )}
         </div>
@@ -322,39 +329,44 @@ function Transcript() {
 
       {/* Safety Check Results */}
       {safetyResult && (
-        <div className="result" style={{ marginTop: '2rem', borderTop: '2px solid var(--border-glow)', paddingTop: '2rem' }}>
+        <div className="result" style={{ marginTop: '2rem', borderTop: '2px solid #e0e0e0', paddingTop: '2rem' }}>
           {safetyResult.success ? (
             <>
               <h2>🛡️ Safety & Ethics Report</h2>
               
               {safetyResult.cached && (
-                <div className="status-message success">
-                  <span>⚡</span>
-                  <span>Using cached safety report</span>
+                <div style={{ 
+                  marginBottom: '1rem', 
+                  padding: '0.75rem', 
+                  background: '#e3f2fd', 
+                  border: '1px solid #2196f3',
+                  borderRadius: '8px',
+                  color: '#1976d2',
+                  fontSize: '0.9rem'
+                }}>
+                  ⚡ Using cached safety report
                 </div>
               )}
 
               {/* Overall Score */}
-              <div className="analysis-card" style={{ 
+              <div style={{ 
                 marginBottom: '2rem', 
-                padding: '1.5rem',
-                background: safetyResult.severity === 'safe' 
-                  ? 'rgba(0, 255, 136, 0.1)' 
-                  : safetyResult.severity === 'warning' 
-                    ? 'rgba(255, 152, 0, 0.1)' 
-                    : 'rgba(255, 68, 68, 0.1)',
-                border: `2px solid ${safetyResult.severity === 'safe' ? 'var(--accent)' : safetyResult.severity === 'warning' ? '#ff9800' : '#ff4444'}`
+                padding: '1.5rem', 
+                background: safetyResult.severity === 'safe' ? '#e8f5e9' : safetyResult.severity === 'warning' ? '#fff3e0' : '#ffebee',
+                borderRadius: '12px',
+                border: `3px solid ${safetyResult.severity === 'safe' ? '#4caf50' : safetyResult.severity === 'warning' ? '#ff9800' : '#f44336'}`
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <h3 style={{ margin: 0, color: 'var(--primary)' }}>Overall Safety Score</h3>
-                    <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                      Status: <strong style={{ color: 'var(--text-primary)' }}>{safetyResult.severity?.toUpperCase()}</strong>
+                    <h3 style={{ margin: 0 }}>Overall Safety Score</h3>
+                    <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#666' }}>
+                      Status: <strong>{safetyResult.severity?.toUpperCase()}</strong>
                     </p>
                   </div>
-                  <div className="score" style={{ 
-                    fontSize: '3rem',
-                    color: safetyResult.severity === 'safe' ? 'var(--accent)' : safetyResult.severity === 'warning' ? '#ff9800' : '#ff4444'
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: 'bold',
+                    color: safetyResult.severity === 'safe' ? '#4caf50' : safetyResult.severity === 'warning' ? '#ff9800' : '#f44336'
                   }}>
                     {safetyResult.overall_score}/100
                   </div>
@@ -363,88 +375,88 @@ function Transcript() {
 
               {/* NSFW/Violence Check */}
               {safetyResult.nsfw_violence && (
-                <div className="analysis-card" style={{ marginBottom: '1.5rem' }}>
+                <div style={{ marginBottom: '1.5rem' }}>
                   <h3>🔞 NSFW & Violence Detection</h3>
-                  <p style={{ color: 'var(--text-secondary)' }}><strong>Score:</strong> <span style={{ color: 'var(--primary)' }}>{safetyResult.nsfw_violence.score}/100</span></p>
-                  <p style={{ color: 'var(--text-secondary)' }}><strong>Flag:</strong> {safetyResult.nsfw_violence.flag ? '⚠️ Flagged' : '✅ Clear'}</p>
-                  <p style={{ color: 'var(--text-secondary)' }}><strong>Frames Analyzed:</strong> {safetyResult.nsfw_violence.frames_analyzed}</p>
-                  {safetyResult.nsfw_violence.issues_found > 0 && (
-                    <p style={{ color: '#ff4444', marginTop: '0.5rem' }}><strong>Issues Found:</strong> {safetyResult.nsfw_violence.issues_found}</p>
-                  )}
-                  {safetyResult.nsfw_violence.details && (
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                      {safetyResult.nsfw_violence.details}
-                    </p>
-                  )}
+                  <div style={{ background: '#fff', padding: '1rem', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                    <p><strong>Score:</strong> {safetyResult.nsfw_violence.score}/100</p>
+                    <p><strong>Flag:</strong> {safetyResult.nsfw_violence.flag ? '⚠️ Flagged' : '✅ Clear'}</p>
+                    <p><strong>Frames Analyzed:</strong> {safetyResult.nsfw_violence.frames_analyzed}</p>
+                    {safetyResult.nsfw_violence.issues_found > 0 && (
+                      <p style={{ color: '#d32f2f' }}><strong>Issues Found:</strong> {safetyResult.nsfw_violence.issues_found}</p>
+                    )}
+                    {safetyResult.nsfw_violence.details && (
+                      <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>
+                        {safetyResult.nsfw_violence.details}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
 
               {/* Bias & Stereotypes Check */}
               {safetyResult.bias_stereotypes && (
-                <div className="analysis-card" style={{ marginBottom: '1.5rem' }}>
+                <div style={{ marginBottom: '1.5rem' }}>
                   <h3>⚖️ Bias & Stereotypes Check</h3>
-                  <p style={{ color: 'var(--text-secondary)' }}><strong>Score:</strong> <span style={{ color: 'var(--primary)' }}>{safetyResult.bias_stereotypes.score}/100</span></p>
-                  <p style={{ color: 'var(--text-secondary)' }}><strong>Flag:</strong> {safetyResult.bias_stereotypes.flag ? '⚠️ Flagged' : '✅ Clear'}</p>
-                  {safetyResult.bias_stereotypes.issues_found > 0 && (
-                    <p style={{ color: '#ff4444', marginTop: '0.5rem' }}><strong>Issues Found:</strong> {safetyResult.bias_stereotypes.issues_found}</p>
-                  )}
-                  {safetyResult.bias_stereotypes.details && (
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                      {safetyResult.bias_stereotypes.details}
-                    </p>
-                  )}
+                  <div style={{ background: '#fff', padding: '1rem', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                    <p><strong>Score:</strong> {safetyResult.bias_stereotypes.score}/100</p>
+                    <p><strong>Flag:</strong> {safetyResult.bias_stereotypes.flag ? '⚠️ Flagged' : '✅ Clear'}</p>
+                    {safetyResult.bias_stereotypes.issues_found > 0 && (
+                      <p style={{ color: '#d32f2f' }}><strong>Issues Found:</strong> {safetyResult.bias_stereotypes.issues_found}</p>
+                    )}
+                    {safetyResult.bias_stereotypes.details && (
+                      <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>
+                        {safetyResult.bias_stereotypes.details}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
 
               {/* Misleading Claims Check */}
               {safetyResult.misleading_claims && (
-                <div className="analysis-card" style={{ marginBottom: '1.5rem' }}>
+                <div style={{ marginBottom: '1.5rem' }}>
                   <h3>⚠️ Misleading Claims Detection</h3>
-                  <p style={{ color: 'var(--text-secondary)' }}><strong>Score:</strong> <span style={{ color: 'var(--primary)' }}>{safetyResult.misleading_claims.score}/100</span></p>
-                  <p style={{ color: 'var(--text-secondary)' }}><strong>Flag:</strong> {safetyResult.misleading_claims.flag ? '⚠️ Flagged' : '✅ Clear'}</p>
-                  {safetyResult.misleading_claims.keywords_found && safetyResult.misleading_claims.keywords_found.length > 0 && (
-                    <div style={{ marginTop: '0.5rem' }}>
-                      <p style={{ color: 'var(--text-secondary)' }}><strong>Suspicious Keywords:</strong></p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
-                        {safetyResult.misleading_claims.keywords_found.map((keyword: string, i: number) => (
-                          <span key={i} style={{
-                            padding: '0.25rem 0.75rem',
-                            background: 'rgba(255, 68, 68, 0.2)',
-                            color: '#ff4444',
-                            borderRadius: '12px',
-                            fontSize: '0.85rem',
-                            border: '1px solid rgba(255, 68, 68, 0.3)'
-                          }}>
-                            {keyword}
-                          </span>
-                        ))}
+                  <div style={{ background: '#fff', padding: '1rem', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                    <p><strong>Score:</strong> {safetyResult.misleading_claims.score}/100</p>
+                    <p><strong>Flag:</strong> {safetyResult.misleading_claims.flag ? '⚠️ Flagged' : '✅ Clear'}</p>
+                    {safetyResult.misleading_claims.keywords_found && safetyResult.misleading_claims.keywords_found.length > 0 && (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <p><strong>Suspicious Keywords:</strong></p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                          {safetyResult.misleading_claims.keywords_found.map((keyword: string, i: number) => (
+                            <span key={i} style={{
+                              padding: '0.25rem 0.75rem',
+                              background: '#ffebee',
+                              color: '#d32f2f',
+                              borderRadius: '12px',
+                              fontSize: '0.85rem'
+                            }}>
+                              {keyword}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {safetyResult.misleading_claims.details && (
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                      {safetyResult.misleading_claims.details}
-                    </p>
-                  )}
+                    )}
+                    {safetyResult.misleading_claims.details && (
+                      <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>
+                        {safetyResult.misleading_claims.details}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
 
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '1rem' }}>
+              <p style={{ fontSize: '0.85rem', color: '#999', marginTop: '1rem' }}>
                 Checked at: {safetyResult.checked_at ? new Date(safetyResult.checked_at).toLocaleString() : 'N/A'}
               </p>
             </>
           ) : (
             <>
-              <h2 style={{ color: '#ff4444' }}>❌ Safety Check Failed</h2>
-              <div className="status-message error">
-                <span>Error:</span>
-                <span>{safetyResult.error}</span>
+              <h2 style={{ color: '#d32f2f' }}>❌ Safety Check Failed</h2>
+              <div style={{ background: '#ffebee', padding: '1rem', borderRadius: '8px', marginTop: '1rem' }}>
+                <p><strong>Error:</strong> {safetyResult.error}</p>
+                <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>{safetyResult.message}</p>
               </div>
-              {safetyResult.message && (
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                  {safetyResult.message}
-                </p>
-              )}
             </>
           )}
         </div>

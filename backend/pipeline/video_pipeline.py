@@ -24,16 +24,35 @@ class VideoPipeline:
         analysis_results = []
         
         for analyzer_class in self.analyzers:
-            analyzer = analyzer_class(self.video_path)
-            result = analyzer.run()
-            analysis_results.append({
-                "analyzer": analyzer_class.__name__,
-                "result": result
-            })
+            try:
+                analyzer = analyzer_class(self.video_path)
+                result = analyzer.run()
+                print(f"✓ {analyzer_class.__name__}: {result}")
+                analysis_results.append({
+                    "analyzer": analyzer_class.__name__,
+                    "result": result
+                })
+            except Exception as e:
+                print(f"⚠️  {analyzer_class.__name__} failed: {e}")
+                # Continue with other analyzers
+        
+        # Validate we have some results
+        if not analysis_results:
+            print("⚠️  No analyzer results available - skipping LLM summary")
+            return {
+                "analyzers": [],
+                "llm_summary": {
+                    "summary": "No analysis data available",
+                    "strengths": [],
+                    "weaknesses": [],
+                    "recommendations": [],
+                    "follow_up_prompt": ""
+                }
+            }
         
         # Step 2: Generate LLM summary AFTER all analyses are complete
         try:
-            print("Generating LLM summary from analysis results...")
+            print(f"Generating LLM summary from {len(analysis_results)} analyzer(s)...")
             llm_summary = generate_analysis_summary(analysis_results)
             print("LLM summary generated successfully")
         except Exception as e:

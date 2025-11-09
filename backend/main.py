@@ -6,6 +6,7 @@ from pipeline.video_pipeline import VideoPipeline
 from preprocessing.audio_processor import AudioProcessor
 from analyzers.transcription_service import TranscriptionService
 from analyzers.safety_checker import SafetyChecker
+from pipeline.veo_enhancer import enhance_video_from_analysis
 import os
 import hashlib
 import json
@@ -15,7 +16,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:3002"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -148,6 +149,18 @@ async def upload_video(video: UploadFile = File(...)):
         # Run the main video pipeline
         video_pipeline = VideoPipeline(video_path)
         result = video_pipeline.run()
+        
+        # Save analysis results for potential enhancement
+        analysis_result_path = f"uploads/analysis_{file_hash}.json"
+        try:
+            with open(analysis_result_path, 'w') as f:
+                json.dump(result, f, indent=2)
+            print(f"💾 Analysis results saved: {analysis_result_path}")
+        except Exception as e:
+            print(f"⚠️  Could not save analysis results: {e}")
+        
+        # Add video_hash to result for frontend
+        result['video_hash'] = file_hash
         
         return result
         
@@ -410,6 +423,92 @@ async def check_video_safety(request: SafetyCheckRequest):
                 "success": False,
                 "error": str(e),
                 "message": "Safety check failed. Please check if transcript and frames exist."
+            }
+        )
+
+@app.post("/enhance-video")
+async def enhance_video_endpoint(request_data: dict):
+    """
+    Enhance video scenes using Veo 2 based on LLM analysis.
+    
+    Request body:
+    {
+        "video_hash": "abc123",
+        "max_scenes": 3,           # optional, default 3
+        "aspect_ratio": "16:9",    # optional, default 16:9
+        "duration_seconds": 6,     # optional, default 6
+        "video_count": 1           # optional, default 1
+    }
+    """
+    try:
+        video_hash = request_data.get('video_hash')
+        max_scenes = request_data.get('max_scenes', 3)
+        aspect_ratio = request_data.get('aspect_ratio', "16:9")
+        duration_seconds = request_data.get('duration_seconds', 6)
+        video_count = request_data.get('video_count', 1)
+        
+        if not video_hash:
+            raise HTTPException(status_code=400, detail="video_hash is required")
+        
+        print(f"\n🎬 Starting video enhancement for: {video_hash}")
+        print(f"   • max_scenes: {max_scenes} | aspect_ratio: {aspect_ratio} | duration_seconds: {duration_seconds} | video_count: {video_count}")
+        
+        # Check if video analysis exists
+        analysis_result_path = f"uploads/analysis_{video_hash}.json"
+        if not os.path.exists(analysis_result_path):
+            raise HTTPException(
+                status_code=404,
+                detail="Video analysis not found. Please run /analyze-video first."
+            )
+        
+        # Load analysis results
+        with open(analysis_result_path, 'r') as f:
+            analysis_data = json.load(f)
+        
+        llm_summary = analysis_data.get('llm_summary', {})
+        
+        if not llm_summary or not llm_summary.get('follow_up_prompt'):
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "error": "No LLM enhancement recommendations found",
+                    "message": "Please ensure video analysis completed successfully with LLM summary."
+                }
+            )
+        
+        # Run Veo enhancement
+        print(f"📊 LLM recommendations available, generating enhanced scenes...")
+        enhancement_result = enhance_video_from_analysis(
+            video_hash=video_hash,
+            llm_summary=llm_summary,
+            max_scenes=max_scenes,
+            aspect_ratio=aspect_ratio,
+            duration_seconds=duration_seconds,
+            video_count=video_count
+        )
+        
+        # Save enhancement results
+        enhancement_path = f"uploads/enhanced/{video_hash}/enhancement_results.json"
+        os.makedirs(os.path.dirname(enhancement_path), exist_ok=True)
+        with open(enhancement_path, 'w') as f:
+            json.dump(enhancement_result, f, indent=2)
+        
+        return JSONResponse(content=enhancement_result)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Enhancement error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e),
+                "message": "Video enhancement failed"
             }
         )
 

@@ -1,402 +1,182 @@
-# Ad Scoring & Transcription Tool
+# Ad Astra – Modular GenAI Ad Testing Framework
 
-> AI-powered video analysis and transcription platform for advertising content
+> “To the stars.” Ad Astra helps marketing teams launch, evaluate, and iterate on creative concepts faster than ever, using a modular GenAI pipeline purpose-built for advertising.
 
-## Features
+---
 
-✅ **Video Analysis** - Intelligent ad scoring and critique  
-✅ **Scene Detection** - Automatic scene boundaries with keyframe extraction  
-✅ **Audio Transcription** - AI-powered transcription using Google Gemini  
-✅ **Safety & Ethics Checking** - NSFW, bias, and misleading claims detection  
-✅ **Smart Caching** - Automatic file reuse to save time and API costs  
-✅ **Tab Navigation** - Seamless switching between analysis and transcription
+## 🚀 Why Ad Astra?
 
-## Quick Start
+Modern marketing teams need more than transcripts and clip scorers—they need a launchpad. Ad Astra orchestrates Google’s Gemini models, Veo 2 video generation, and visual/audio analytics inside a node-based workflow that feels familiar to n8n or Airflow, while staying laser-focused on ad quality and compliance.
+
+Whether you want to analyze, criticise, or enhance an AI-generated spot, Ad Astra lets you mix and match pipeline nodes, visualize dependencies, and re-run individual steps without restarting the whole rocket.
+
+---
+
+## ✨ Feature Highlights
+
+- **Modular Pipeline Graph** – Interactive React Flow UI shows every stage (upload, scene detection, transcription, safety, LLM, enhancement) with live status and manual triggers.
+- **Scene-Aware Preprocessing** – PySceneDetect finds cuts, extracts five keyframes per scene, and keeps per-scene audio for downstream models.
+- **Gemini-Powered Transcription** – Google Gemini transforms audio into transcripts, summaries, and key prompts with smart caching.
+- **Safety & Ethics Radar** – Detect NSFW cues, bias, or misleading claims across transcript and keyframes with tiered risk scoring.
+- **Veo 2 Enhancer** – Generate refreshed ad variations in 4–8 second clips using the official Veo 2 model and LLM-driven prompts.
+- **Smart Cache Layer** – Re-uses video, audio, transcript, and safety artifacts based on hash so re-runs hit cached responses in <1s.
+- **Developer-Friendly API** – FastAPI endpoints let you drive the same analytics programmatically.
+
+---
+
+## 🌌 UI Tour
+
+| View | What You Get |
+|------|---------------|
+| **Video Analysis** | Upload ads, inspect analyzer outputs, run Veo 2 enhancement with duration/aspect controls |
+| **Transcript Lab** | One-click transcription, Gemini summary, run-once safety check, cached indicators |
+| **Pipeline Graph** | N8n-style node canvas showing each module’s state and manual triggers with a coordinating micro-dashboard |
+
+All buttons and inputs share the same pastel/gradient aesthetic, so sliding between tabs feels cohesive.
+
+---
+
+## 🧩 Architecture at a Glance
+
+```mermaid
+flowchart LR
+  A[Upload & Hash] --> B[Scene Detection<br/>Keyframes + Audio]
+  A --> C[Gemini Transcription]
+  B --> D[Safety Check<br/>Frames + Transcript]
+  C --> D
+  B --> E[LLM Summary<br/>Insights + Prompt]
+  E --> F[Veo 2 Enhancement]
+  D --> F
+  subgraph UI
+    G[Pipeline Graph]
+    H[Analysis Tab]
+    I[Transcript Tab]
+  end
+  A --> G
+  F --> H
+  C --> I
+```
+
+### Modules
+- **Backend /preprocessing** – `AudioProcessor` coordinates scene detection, keyframes, and audio extraction.
+- **Backend /analyzers** – `TranscriptionService` (Gemini) and `SafetyChecker` (multi-step scoring).
+- **Backend /pipeline** – `veo_enhancer.py` orchestrates Veo 2 calls using LLM prompts and user-selected parameters.
+- **Frontend** – React + React Flow for graph nodes, TypeScript for tabbed UI, shared theming.
+
+---
+
+## ⚙️ Quick Start
 
 ### Prerequisites
 
-- Python 3.8+
-- Node.js 16+
-- Google AI Studio API Key ([Get one here](https://aistudio.google.com/app/apikey))
+- Python 3.9+
+- Node.js 18+
+- Google AI Studio API key (Gemini + Veo access)
 
-### Setup
+### Install & Launch
 
 ```bash
-# 1. Clone the repository
+# Clone
 git clone <repo-url>
 cd hack-nation-hackathon
 
-# 2. Backend setup
+# Backend
 cd backend
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-# Create .env file
-echo "GOOGLE_AI_STUDIO_API_KEY=your_api_key_here" > .env
-
-# 3. Frontend setup
-cd ../frontend
-npm install
-
-# 4. Start both servers
-cd ../backend
+echo "GOOGLE_AI_STUDIO_API_KEY=your_key" > .env
 uvicorn main:app --reload --port 8000
 
-# In another terminal
-cd frontend
+# Frontend (new terminal)
+cd ../frontend
+npm install
 npm run dev
 ```
 
-Visit **http://localhost:5173** to use the application.
+Open **http://localhost:3000**. Backend lives at **http://localhost:8000**.
 
-## Architecture
+---
 
-### Video Processing Pipeline
+## 🔌 Key Endpoints
 
-```
-Video Upload
-    ↓
-Scene Detection (PySceneDetect)
-    ↓
-├─ Extract 5 Keyframes per Scene
-├─ Extract Audio per Scene
-└─ Full Audio Extraction
-    ↓
-AI Transcription (Google Gemini)
-    ↓
-Structured Output (Transcript + Summary + Key Points)
-    ↓
-Safety & Ethics Check (Optional)
-    ├─ NSFW/Violence Detection (Keyframes)
-    ├─ Bias/Stereotype Detection (Transcript)
-    └─ Misleading Claims Verification (Transcript)
-```
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /analyze-video` | Full pipeline (scene detection, LLM summary, caching) |
+| `POST /transcript` | Gemini-powered transcript + summary + key points |
+| `POST /safety-check` | Run full safety analysis using cached transcript/keyframes |
+| `POST /enhance-video` | Veo 2 enhancement (accepts `max_scenes`, `aspect_ratio`, `duration_seconds`, `video_count`) |
 
-### Smart Caching System
+All endpoints reuse artifacts via hash-based caching, saving compute and billing credits.
 
-The application intelligently reuses existing files:
+---
 
-- **Videos**: MD5-based deduplication
-- **Audio**: Skips extraction if exists
-- **Transcripts**: Returns cached results instantly
-
-**Performance Impact:**
-- First upload: ~60 seconds
-- Cached upload: <1 second ⚡
-- **API cost savings: 50%**
-
-## API Endpoints
-
-### POST /transcript
-Transcribe audio from video
-
-```bash
-curl -X POST http://localhost:8000/transcript \
-  -F "video=@path/to/video.mp4"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "transcript": "Full transcript text...",
-  "summary": "Brief summary of content...",
-  "key_points": ["point 1", "point 2", ...],
-  "language": "English",
-  "word_count": 523,
-  "cached": false,
-  "transcript_path": "uploads/transcripts/..."
-}
-```
-
-### POST /analyze-video
-Analyze video for ad scoring
-
-```bash
-curl -X POST http://localhost:8000/analyze-video \
-  -F "video=@path/to/video.mp4"
-```
-
-### POST /safety-check
-Check video content for safety and ethical concerns
-
-```bash
-curl -X POST http://localhost:8000/safety-check \
-  -H "Content-Type: application/json" \
-  -d '{"video_hash": "abc123"}'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "video_hash": "abc123",
-  "overall_score": 85.0,
-  "severity": "safe",
-  "nsfw_violence": {
-    "score": 95,
-    "flag": "safe",
-    "details": "No NSFW or violent content detected",
-    "frames_analyzed": 10
-  },
-  "bias_stereotypes": {
-    "score": 80,
-    "flag": "safe",
-    "details": "Language is inclusive and unbiased"
-  },
-  "misleading_claims": {
-    "score": 90,
-    "flag": "safe",
-    "details": "No misleading claims detected"
-  },
-  "cached": false
-}
-```
-
-## File Management
-
-### Check Disk Usage
-
-```bash
-cd backend
-make list-artifacts
-```
-
-Output:
-```
-📊 Disk usage of generated files:
-🎵 Audio files: 1.3M
-🖼️  Frame files: 2.8M
-📝 Transcripts: 28K
-🎬 Videos: 7.5M
-```
-
-### Cleanup Commands
-
-```bash
-# Remove processed files (keeps videos)
-make clean-artifacts
-
-# Remove only specific types
-make clean-audio        # Audio files only
-make clean-frames       # Frame files only
-make clean-transcripts  # Transcript files only
-
-# Remove everything
-make clean-all
-
-# Show all commands
-make help
-```
-
-## Testing
-
-```bash
-cd backend
-
-# Test scene detection and audio extraction
-python3 test_processor.py
-
-# Test transcription service
-python3 test_transcription.py
-
-# Test transcript API endpoint
-python3 test_transcript_endpoint.py
-
-# Test safety checking
-python3 test_safety_checker.py
-```
-
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 hack-nation-hackathon/
 ├── backend/
-│   ├── analyzers/              # AI analyzers
-│   │   ├── transcription_service.py
-│   │   ├── safety_checker.py
-│   │   ├── ia_face_detector.py
-│   │   └── censor.py
-│   ├── preprocessing/          # Video/audio processing
-│   │   ├── audio_processor.py  # Scene detection & audio
-│   │   ├── video_processor.py  # Frame extraction
-│   │   └── models.py           # Data models
-│   ├── pipeline/               # Processing pipelines
-│   ├── docs/                   # Technical documentation
-│   │   ├── README.md           # Architecture overview
-│   │   ├── SCENE_BASED_PROCESSING.md
-│   │   ├── TRANSCRIPTION.md
-│   │   └── SAFETY_CHECKS.md
-│   ├── main.py                 # FastAPI application
-│   ├── config.py               # Configuration
-│   ├── requirements.txt        # Python dependencies
-│   ├── Makefile                # Cleanup commands
-│   └── CLEANUP_GUIDE.md        # File management guide
+│   ├── analyzers/            # Gemini transcription & safety modules
+│   ├── preprocessing/        # Scene detection & audio extraction
+│   ├── pipeline/             # Veo 2 enhancement orchestration
+│   ├── docs/                 # Technical notes (safety, transcription, Veo)
+│   ├── main.py               # FastAPI application
+│   └── Makefile              # Artifact cleanup helpers
 ├── frontend/
 │   ├── src/
-│   │   ├── App.tsx             # Main app with tabs
-│   │   ├── Transcript.tsx      # Transcription UI
-│   │   └── main.tsx
-│   ├── package.json
+│   │   ├── App.tsx           # Tabbed UI + pipeline graph integration
+│   │   ├── PipelineGraph.tsx # React Flow nodes & triggers
+│   │   └── Transcript.tsx    # Transcript detail view
 │   └── vite.config.ts
-└── README.md                   # This file
+└── README.md                 # You are here
 ```
 
-## Key Dependencies
+---
 
-### Backend
-- **fastapi** - Web framework
-- **scenedetect[opencv]** - Scene detection
-- **google-generativeai** - Gemini API
-- **moviepy** - Video processing
-- **pydub** - Audio manipulation
-- **Pillow** - Image processing
-
-### Frontend
-- **React** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-
-## Environment Variables
-
-Create `backend/.env`:
+## 🧪 Testing & Tooling
 
 ```bash
-GOOGLE_AI_STUDIO_API_KEY=your_gemini_api_key_here
-```
-
-## Features in Detail
-
-### Scene Detection
-- Uses PySceneDetect's ContentDetector
-- Adjustable sensitivity (default threshold: 27.0)
-- Extracts 5 keyframes per scene (0%, 25%, 50%, 75%, 100%)
-- Preserves scene audio segments
-
-### Audio Transcription
-- Powered by Google Gemini AI
-- Generates structured output:
-  - Full transcript
-  - Content summary
-  - Key points extraction
-  - Language detection
-- Automatic retry on failures
-- Saves JSON and TXT formats
-
-### Safety & Ethics Checking
-- **NSFW/Violence Detection**: Analyzes keyframes for inappropriate content
-- **Bias/Stereotype Detection**: Checks transcript for discriminatory language
-- **Misleading Claims Verification**: Detects unverifiable or false claims
-- Comprehensive scoring system (0-100)
-- Three severity levels: safe, warning, unsafe
-- Smart caching for performance
-
-### Frontend UI
-- Tab navigation between Analysis and Transcript
-- Real-time upload progress
-- Cached result indicators
-- Beautiful results display
-- Error handling with helpful messages
-
-## Performance & Caching
-
-### Cache Benefits
-
-**Without caching:**
-```
-Request 1: 60s (upload + process + transcribe)
-Request 2: 60s (duplicate processing)
-Total: 120s, 2 API calls
-```
-
-**With caching:**
-```
-Request 1: 60s (full processing)
-Request 2: <1s (instant cached response! ⚡)
-Total: 61s, 1 API call
-Savings: 98% faster, 50% fewer API calls
-```
-
-### Cache Indicators
-
-- **Backend logs:** `✓ Using existing transcript`
-- **Frontend UI:** Blue banner with ⚡ icon
-- **API response:** `"cached": true`
-
-## Development
-
-### Running Tests
-
-```bash
+# Backend smoke tests
 cd backend
-
-# All tests
-python3 test_processor.py
-python3 test_transcription.py
+python3 test_processor.py        # Scene detection
+python3 test_transcription.py    # Gemini transcription
 python3 test_transcript_endpoint.py
-```
+python3 test_safety_checker.py   # Safety pipeline
 
-### Linting
-
-```bash
-# Backend (if configured)
-cd backend
-pylint analyzers/ preprocessing/ pipeline/
-
-# Frontend
+# Frontend lint (if configured)
 cd frontend
 npm run lint
 ```
 
-### Adding New Features
+Cleanup helpers (backend):
 
-1. **Backend:** Add to appropriate module (analyzers, preprocessing, pipeline)
-2. **Frontend:** Add component in src/
-3. **Update docs:** backend/docs/ for technical details
-4. **Add tests:** Create test_*.py files
-5. **Update README:** Document new features here
-
-## Troubleshooting
-
-### "Connection Error"
-Ensure backend is running on port 8000:
 ```bash
-cd backend
-uvicorn main:app --reload --port 8000
+make list-artifacts   # Show disk usage
+make clean-artifacts  # Remove outputs (keep uploads)
+make clean-all        # Nuke caches (use with caution)
 ```
-
-### "API key not found"
-Check `.env` file exists and contains valid key:
-```bash
-cat backend/.env
-```
-
-### "Audio file not found"
-Clean and retry:
-```bash
-make clean-audio
-```
-
-### CORS Errors
-Backend allows localhost:3000 and localhost:5173. Update `main.py` CORS settings if using different port.
-
-## Contributing
-
-1. Create feature branch
-2. Make changes
-3. Run tests
-4. Update documentation
-5. Submit PR
-
-## License
-
-[Your license here]
-
-## Support
-
-For issues or questions, please [open an issue](link-to-issues).
 
 ---
 
-**Built with:** Python • FastAPI • React • TypeScript • Google Gemini AI
+## 🚧 Roadmap Ideas
 
-**Last Updated:** November 2025
+- Veo 3.x reference image support + continuity controls
+- Batch job orchestration (queue + worker model)
+- Hosted templates for A/B testing creative variants
+- Built-in prompt library for different industries
+
+---
+
+## 🌠 About the Name
+
+**Ad Astra** means “to the stars.” Our mission is to help companies scale AI-driven marketing campaigns beyond the ordinary, with a launchpad that keeps humans in control and compliance in check.
+
+---
+
+## 🙌 Credits
+
+- FastAPI, PySceneDetect, MoviePy, Pydub
+- Google Gemini (Transcription & Safety), Veo 2 (Video Generation)
+- React, Vite, React Flow
+
+---
+
