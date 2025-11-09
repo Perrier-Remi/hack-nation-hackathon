@@ -70,3 +70,4 @@ vide_name = "ugc_video"
 video_processor = VideoProcessor(video_path)
 key_frames = video_processor.sample_frames_every_half_second(video_name,blur_threshold=100, max_frames=60)
 """
+
