@@ -1,4 +1,3 @@
-from analyzers.base_analyzer import BaseAnalyzer
 import cv2
 import numpy as np
 from ultralytics import YOLO
@@ -6,7 +5,7 @@ from typing import List
 import os
 from skimage.restoration import denoise_bilateral
 
-class IAFaceDetector(BaseAnalyzer):
+class IAFaceDetector():
     def __init__(self, video_path: str):
         self.video_path = video_path
         self.images = self._extract_images()

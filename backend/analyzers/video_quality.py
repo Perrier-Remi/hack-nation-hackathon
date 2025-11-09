@@ -1,10 +1,9 @@
-from analyzers.base_analyzer import BaseAnalyzer
 import cv2
 import numpy as np
 from typing import Dict, List
 from PIL import Image
 
-class VideoQualityAnalyzer(BaseAnalyzer):
+class VideoQualityAnalyzer():
     def __init__(self, video_path: str):
         super().__init__(video_path)
     
